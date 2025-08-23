@@ -26,7 +26,7 @@ app.use(cookieParser());
 // app.use(cors({ origin: allowedOrigins, Credential: true }));
 // app.use(cors());
 app.use(cors({
-  origin: 'http://localhost:5173', // your frontend URL
+  origin: 'https://greencart-1-tiui.onrender.com', // your frontend URL
   credentials: true // allow credentials like cookies
 }));
 
