@@ -34,7 +34,7 @@ export const AppContextProvider = ({ children }) => {
   // Fetch User Auth Status, User data and cart Items
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get("api/user/is-auth");
+      const { data } = await axios.get("/api/user/is-auth");
       if (data.success) {
         setUser(data.user);
         setCartItems(data.user.cartItems);
