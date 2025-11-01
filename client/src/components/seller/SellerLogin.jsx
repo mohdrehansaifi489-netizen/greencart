@@ -12,7 +12,8 @@ const SellerLogin = () => {
     try {
       const { data } = await axios.post(
         '/api/seller/login',
-        { email, password }
+        { email, password },
+        { withCredentials: true},
          // ✅ make sure cookie is sent
       )
 
