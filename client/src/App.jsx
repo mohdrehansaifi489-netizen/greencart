@@ -49,7 +49,7 @@ const App = () => {
           {/* Seller Routes */}
           <Route
             path="/seller"
-            element={isSeller ? <SellerLayout /> : <SellerLogin />}
+            element={isSeller ? <SellerLayour /> : <SellerLogin />}
           >
             {/* ✅ Correct way: one "index" per layout */}
             <Route index element={<ProductList />} />
