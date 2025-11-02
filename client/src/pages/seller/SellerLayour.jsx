@@ -3,7 +3,7 @@ import { assets } from "../../assets/assets";
 import { useAppContext } from "../../context/AppContext";
 import { Link, NavLink, Outlet } from "react-router-dom";
 
-const SellerLayout = () => {
+const SellerLayour = () => {
   const { axios, navigate } = useAppContext();
 
   const sidebarLinks = [
