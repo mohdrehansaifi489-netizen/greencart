@@ -2,43 +2,47 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { dummyProducts } from "../assets/assets";
 import toast from "react-hot-toast";
-import axios from "axios";
+import axiosLib from "axios";
 
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
+// ✅ Configure axios instance (to avoid reactivity issues)
+const axios = axiosLib.create({
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+  withCredentials: true,
+});
 
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
-  const currency = import.meta.env.VITE_CURRENCY;
-
+  const currency = import.meta.env.VITE_CURRENCY || "₹";
   const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
-  const [loginRole, setLoginRole] = useState("user"); // ✅ important
+  const [loginRole, setLoginRole] = useState("user");
 
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ Fetch Seller Status
+  // 🧭 Fetch Seller Auth
   const fetchSeller = async () => {
     try {
       const { data } = await axios.get("/api/seller/is-auth");
-      setIsSeller(data.success);
-    } catch {
+      setIsSeller(Boolean(data?.success));
+    } catch (err) {
+      console.warn("Seller auth failed:", err.message);
       setIsSeller(false);
     }
   };
 
-  // ✅ Fetch User Data
+  // 👤 Fetch User Auth
   const fetchUser = async () => {
     try {
       const { data } = await axios.get("/api/user/is-auth");
-      if (data.success) {
+      if (data.success && data.user) {
         setUser(data.user);
-        setCartItems(data.user.cartItems);
+        setCartItems(data.user.cartItems || {});
       } else {
         setUser(null);
       }
@@ -47,14 +51,18 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // ✅ Fetch Products
+  // 📦 Fetch Products
   const fetchProducts = async () => {
     try {
       const { data } = await axios.get("/api/product/list");
-      setProducts(data.success && data.products.length ? data.products : dummyProducts);
+      if (data.success && Array.isArray(data.products)) {
+        setProducts(data.products);
+      } else {
+        setProducts(dummyProducts);
+      }
     } catch {
-      setProducts(dummyProducts);
       console.log("Product Fallback Active");
+      setProducts(dummyProducts);
     }
   };
 
@@ -64,17 +72,21 @@ export const AppContextProvider = ({ children }) => {
     fetchProducts();
   }, []);
 
-  // ✅ Update Cart in DB if logged-in user
+  // 🛒 Sync Cart
   useEffect(() => {
+    if (!user) return;
     const updateCart = async () => {
       try {
         const { data } = await axios.post("/api/cart/update", { cartItems });
         if (!data.success) toast.error(data.message);
-      } catch { }
+      } catch (err) {
+        console.error("Cart update failed:", err.message);
+      }
     };
-    if (user) updateCart();
+    updateCart();
   }, [cartItems]);
 
+  // ✅ Provide Safe Context
   const value = {
     navigate,
     user,
@@ -98,4 +110,8 @@ export const AppContextProvider = ({ children }) => {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export const useAppContext = () => useContext(AppContext);
+export const useAppContext = () => {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useAppContext must be used within AppContextProvider");
+  return ctx;
+};
