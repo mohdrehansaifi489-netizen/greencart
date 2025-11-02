@@ -15,7 +15,7 @@ import MyOrders from './pages/MyOrders';
 
 // ✅ FIXED: Corrected the typo (SellerLayour → SellerLayout)
 import SellerLogin from './components/seller/SellerLogin';
-import SellerLayour from './pages/seller/SellerLayour';
+import SellerLayour from './pages/seller/SellerLayout';
 import AddProduct from './pages/seller/AddProduct';
 import ProductList from './pages/seller/ProductList';
 import Orders from './pages/seller/Orders';
