@@ -1,144 +1,153 @@
-import React, { useState } from "react";
+import React from "react";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
 const Login = () => {
   const {
     setShowUserLogin,
-    axios,
-    navigate,
     setUser,
     setIsSeller,
+    axios,
+    navigate,
     loginRole,
-    setLoginRole
+    setLoginRole,
   } = useAppContext();
 
-  const [state, setState] = useState("login");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [state, setState] = React.useState("login");
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
 
-  const onSubmitHandler = async (e) => {
-    e.preventDefault();
-
-    const endpoint =
-      loginRole === "seller"
-        ? `/api/seller/${state}`
-        : `/api/user/${state}`;
-
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
     try {
-      const { data } = await axios.post(
-        endpoint,
-        { name, email, password },
-        { withCredentials: true }
-      );
+      // dynamic API route based on login role (user or seller)
+      const endpoint = loginRole === "seller" ? "/api/seller" : "/api/user";
 
-      if (!data.success) return toast.error(data.message);
+      const { data } = await axios.post(`${endpoint}/${state}`, {
+        name,
+        email,
+        password,
+      });
 
-      setShowUserLogin(false);
-
-      if (loginRole === "seller") {
-        setIsSeller(true);
-        navigate("/seller");
+      if (data.success) {
+        if (loginRole === "seller") {
+          setIsSeller(true);
+          navigate("/seller/dashboard");
+        } else {
+          setUser(data.user);
+          navigate("/");
+        }
+        toast.success(`${loginRole === "seller" ? "Seller" : "User"} ${state} successful!`);
+        setShowUserLogin(false);
       } else {
-        setUser(data.user);
-        navigate("/");
+        toast.error(data.message);
       }
-
-      toast.success("✅ Login Successful");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Login Failed");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
   return (
     <div
       onClick={() => setShowUserLogin(false)}
-      className="fixed inset-0 z-30 flex items-center justify-center bg-black/50"
+      className="fixed top-0 bottom-0 left-0 right-0 z-30 flex items-center text-sm text-gray-600 bg-black/50"
     >
       <form
         onSubmit={onSubmitHandler}
         onClick={(e) => e.stopPropagation()}
-        className="flex flex-col gap-4 bg-white w-80 sm:w-96 p-8 rounded-xl shadow-lg"
+        className="flex flex-col gap-4 m-auto items-start p-8 py-12 w-80 sm:w-[352px] rounded-lg shadow-xl border border-gray-200 bg-white"
       >
-        {/* Toggle User / Seller */}
-        <div className="flex gap-4 m-auto">
-          <button
-            type="button"
-            className={`px-3 py-1 rounded ${loginRole === "user" ? "bg-primary text-white" : "bg-gray-300"}`}
-            onClick={() => setLoginRole("user")}
-          >
-            User
-          </button>
-          <button
-            type="button"
-            className={`px-3 py-1 rounded ${loginRole === "seller" ? "bg-primary text-white" : "bg-gray-300"}`}
-            onClick={() => setLoginRole("seller")}
-          >
-            Seller
-          </button>
-        </div>
-
-        <p className="text-2xl font-medium text-center">
-          {loginRole === "seller" ? "Seller" : "User"}{" "}
+        <p className="text-2xl font-medium m-auto">
+          <span className="text-primary capitalize">{loginRole}</span>{" "}
           {state === "login" ? "Login" : "Sign Up"}
         </p>
 
-        {state === "register" && loginRole === "user" && (
+        {/* Toggle Role */}
+        <div className="flex gap-4 mb-3 text-sm">
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="user"
+              checked={loginRole === "user"}
+              onChange={() => setLoginRole("user")}
+            />{" "}
+            User
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="seller"
+              checked={loginRole === "seller"}
+              onChange={() => setLoginRole("seller")}
+            />{" "}
+            Seller
+          </label>
+        </div>
+
+        {state === "register" && (
+          <div className="w-full">
+            <p>Name</p>
+            <input
+              onChange={(e) => setName(e.target.value)}
+              value={name}
+              placeholder="type here"
+              className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
+              type="text"
+              required
+            />
+          </div>
+        )}
+        <div className="w-full">
+          <p>Email</p>
           <input
-            type="text"
-            className="border p-2 rounded"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
+            value={email}
+            placeholder="type here"
+            className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
+            type="email"
             required
           />
+        </div>
+        <div className="w-full">
+          <p>Password</p>
+          <input
+            onChange={(e) => setPassword(e.target.value)}
+            value={password}
+            placeholder="type here"
+            className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
+            type="password"
+            required
+          />
+        </div>
+
+        {state === "register" ? (
+          <p>
+            Already have an account?{" "}
+            <span
+              onClick={() => setState("login")}
+              className="text-primary cursor-pointer"
+            >
+              click here
+            </span>
+          </p>
+        ) : (
+          <p>
+            Create an account?{" "}
+            <span
+              onClick={() => setState("register")}
+              className="text-indigo-500 cursor-pointer"
+            >
+              click here
+            </span>
+          </p>
         )}
 
-        <input
-          type="email"
-          className="border p-2 rounded"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <input
-          type="password"
-          className="border p-2 rounded"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        <p className="text-center">
-          {state === "login" ? (
-            <>
-              Need an account?{" "}
-              <span
-                onClick={() => setState("register")}
-                className="text-primary cursor-pointer"
-              >
-                Sign Up
-              </span>
-            </>
-          ) : (
-            <>
-              Already registered?{" "}
-              <span
-                onClick={() => setState("login")}
-                className="text-primary cursor-pointer"
-              >
-                Login
-              </span>
-            </>
-          )}
-        </p>
-
-        <button className="bg-primary text-white w-full py-2 rounded-md">
-          Continue
+        <button className="bg-primary hover:bg-primary-dull transition-all text-white w-full py-2 rounded-md cursor-pointer">
+          {state === "register" ? "Create Account" : "Login"}
         </button>
       </form>
     </div>
